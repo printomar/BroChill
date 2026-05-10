@@ -1,0 +1,26 @@
+{
+  "_schema_version": 1,
+  "_schema_notes": {
+    "tier": "1 = maximum severity (full takeover), 2 = medium (banner/partial), 3 = mild (toast/sound)",
+    "weight": "relative probability weight; higher = more likely to be picked at this tier",
+    "type": "overlay | sound | both",
+    "assets.html": "path to Electron overlay HTML file, relative to electron/",
+    "assets.sound": "optional path to audio file, relative to bits/assets/"
+  },
+  "bits": [
+    {
+      "id": "bsod",
+      "tier": 1,
+      "weight": 10,
+      "type": "overlay",
+      "assets": {
+        "html": "renderer/bsod.html"
+      },
+      "copy": {
+        "headline": "Your computer ran into a problem.",
+        "subtext": "CORTISOL_LEVEL_CRITICAL (0x0000CAFE). We're just collecting some rage info, then we'll restart for you.",
+        "stop_code": "CORTISOL_OVERLOAD"
+      }
+    }
+  ]
+}

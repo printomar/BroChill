@@ -1,0 +1,43 @@
+{
+  "_schema_version": 1,
+
+  "keyboard": {
+    "_comment": "velocity: keys/sec over velocity_window seconds. burst: same key >= burst_threshold times in burst_window seconds.",
+    "velocity_threshold": 9,
+    "velocity_window": 3,
+    "burst_threshold": 5,
+    "burst_window": 1,
+    "cooldown_seconds": 10
+  },
+
+  "undo_storm": {
+    "_comment": "Flags Ctrl-Z spam. undo_count_threshold undos inside window_seconds = someone is NOT okay.",
+    "undo_count_threshold": 8,
+    "window_seconds": 10
+  },
+
+  "mouse_slam": {
+    "_comment": "Flags violent cursor throws. pixel_velocity_threshold is px/sec; consecutive_slams must happen in a row.",
+    "pixel_velocity_threshold": 3000,
+    "consecutive_slams": 3
+  },
+
+  "crash_detection": {
+    "_comment": "Watches for unexpected exits of the listed processes. Add whatever you're likely to rage-kill.",
+    "watched_processes": ["chrome.exe", "code.exe", "node.exe", "python.exe"]
+  },
+
+  "failed_builds": {
+    "_comment": "Counts non-zero exits from build/test commands wrapped with `cg run`. Consecutive failures compound.",
+    "exit_code_threshold": 1,
+    "consecutive_failures": 2
+  },
+
+  "cooldown_seconds": 30,
+
+  "overlay": {
+    "_comment": "HTTP trigger server embedded in the Electron process.",
+    "port": 8765,
+    "enabled": true
+  }
+}
