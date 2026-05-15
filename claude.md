@@ -41,8 +41,8 @@ Pure absurdist meme. Fake-corporate seriousness layered on stupid premises. "Pro
 
 1. ✅ Project skeleton + config loader + bit pool JSON schema
 2. ✅ Keystroke velocity detection (sustained + same-key burst)
-3. ⏳ Electron overlay scaffold + persistent HTTP server + BSOD hero bit + Python→Electron trigger
-4. Tray icon with cortisol meter (decaying float, separate persistent Electron window)
+3. ✅ Electron overlay + persistent HTTP server + cortisol_spike hero bit (BSOD archived for Step 6 pool)
+4. ❌ Tray icon (skipped) with cortisol meter (decaying float, separate persistent Electron window)
 5. Remaining detectors: undo storm, mouse slam, crash detection, `cg run` wrapper for failed builds
 6. Bit pool expansion (target: 12 bits at v1; mix of visual overlays, fake notifications, ironic breathing exercise, sound effects)
 7. Sound effects layer (Web Audio in renderer, no external libs)

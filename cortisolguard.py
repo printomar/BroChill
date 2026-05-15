@@ -1,6 +1,5 @@
 import json
 import os
-import signal
 import socket
 import subprocess
 import sys
@@ -34,6 +33,7 @@ def spawn_electron() -> subprocess.Popen:
         cwd=electron_dir,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
     )
 
 
@@ -84,22 +84,38 @@ def main() -> None:
             f" | key={event.trigger_key!r}"
         )
         if overlay_enabled:
-            trigger_overlay(port, "bsod")
+            trigger_overlay(port, "cortisol_spike")
 
     detector = KeyboardDetector(config, on_rage)
 
-    def shutdown(sig, frame):
-        print("\nCortisolGuard disarmed.")
-        detector.stop()
+    def shutdown() -> None:
+        print("\nBro Chill disarmed.")
+        try:
+            detector.stop()
+        except Exception:
+            pass
         if overlay_proc:
-            overlay_proc.terminate()
-        sys.exit(0)
+            try:
+                overlay_proc.terminate()
+                overlay_proc.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                overlay_proc.kill()
+            except Exception:
+                pass
+            if overlay_proc.poll() is None:
+                subprocess.run(
+                    ["taskkill", "/F", "/T", "/PID", str(overlay_proc.pid)],
+                    capture_output=True,
+                )
+        os._exit(0)
 
-    signal.signal(signal.SIGINT, shutdown)
-
-    print("CortisolGuard armed.")
+    print("Bro Chill armed.")
     detector.start()
-    detector.join()
+    try:
+        while True:
+            time.sleep(0.2)
+    except KeyboardInterrupt:
+        shutdown()
 
 
 if __name__ == "__main__":

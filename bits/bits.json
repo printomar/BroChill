@@ -9,18 +9,11 @@
   },
   "bits": [
     {
-      "id": "bsod",
+      "id": "cortisol_spike",
       "tier": 1,
-      "weight": 10,
-      "type": "overlay",
-      "assets": {
-        "html": "renderer/bsod.html"
-      },
-      "copy": {
-        "headline": "Your computer ran into a problem.",
-        "subtext": "CORTISOL_LEVEL_CRITICAL (0x0000CAFE). We're just collecting some rage info, then we'll restart for you.",
-        "stop_code": "CORTISOL_OVERLOAD"
-      }
+      "weight": 100,
+      "type": "visual_overlay",
+      "assets": {}
     }
   ]
 }

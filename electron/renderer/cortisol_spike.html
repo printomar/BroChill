@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CORTISOL LEVEL</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      background: #0a0a0a;
+      background-image: radial-gradient(circle, rgba(220,40,40,0.15), transparent 70%);
+      color: #fff;
+      font-family: 'Consolas', 'Courier New', monospace;
+      overflow: hidden;
+      user-select: none;
+      cursor: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4vh 4vw;
+      box-sizing: border-box;
+      gap: 2vh;
+    }
+
+    /* One-shot red flash — opacity only used for single transition, not blink */
+    #flash {
+      position: fixed;
+      inset: 0;
+      background: rgba(220, 40, 40, 0.4);
+      pointer-events: none;
+      z-index: 99;
+      opacity: 0;
+    }
+
+    .title {
+      font-size: clamp(2rem, 4vw, 5rem);
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: #fff;
+      font-family: 'Segoe UI', 'Arial Black', Arial, sans-serif;
+    }
+
+    #gauge-svg {
+      max-width: 50vw;
+      max-height: 50vh;
+      width: auto;
+      height: auto;
+    }
+
+    /* CSS transform on SVG group — pivot at gauge center (300, 300) in SVG user units */
+    #needle-group {
+      transform-origin: 300px 300px;
+      transform: rotate(-90deg);
+    }
+
+    .cortisol-line {
+      font-size: clamp(1.5rem, 2.5vw, 3rem);
+      letter-spacing: 0.1em;
+      color: #fff;
+    }
+
+    /* Blink via color only — no opacity, no visibility */
+    @keyframes cortisol-blink {
+      0%, 49% { color: #dc3c3c; }
+      50%, 100% { color: #ffffff; }
+    }
+
+    .cortisol-value {
+      color: #dc3c3c;
+      animation: cortisol-blink 0.8s step-end infinite;
+    }
+
+    .hint {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: clamp(0.8rem, 1.2vw, 1.2rem);
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="flash"></div>
+
+  <div class="title">CORTISOL LEVEL</div>
+
+  <!--
+    Gauge SVG.
+    Center of arc: (300, 300). Outer radius: 270. Inner radius: 188.
+    Semicircle spans 180° → 0° in standard math (left → right).
+    5 segments of 36° each. Segments and labels built in <script>.
+  -->
+  <svg id="gauge-svg" viewBox="0 0 600 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Segment paths filled by JS -->
+    <g id="segments"></g>
+
+    <!-- Axis labels -->
+    <text x="18"  y="316" fill="rgba(255,255,255,0.8)" font-size="20"
+          font-family="Consolas,monospace" font-weight="bold" text-anchor="start">LOW</text>
+    <text x="300" y="24"  fill="rgba(255,255,255,0.8)" font-size="20"
+          font-family="Consolas,monospace" font-weight="bold" text-anchor="middle">MEDIUM</text>
+    <text x="582" y="316" fill="rgba(255,255,255,0.8)" font-size="20"
+          font-family="Consolas,monospace" font-weight="bold" text-anchor="end">HIGH</text>
+
+    <!-- Needle: drawn pointing UP (12 o'clock); rotated via CSS -->
+    <g id="needle-group">
+      <!-- Shaft: wide at hub, thin at tip -->
+      <polygon points="294,300 306,300 302,72 298,72" fill="#1a2540"/>
+      <!-- Tip cap -->
+      <circle cx="300" cy="68" r="4" fill="#1a2540"/>
+      <!-- Hub outer ring -->
+      <circle cx="300" cy="300" r="16" fill="#1a2540"/>
+      <!-- Hub inner highlight -->
+      <circle cx="300" cy="300" r="7"  fill="#2e3f6e"/>
+    </g>
+
+  </svg>
+
+  <div class="cortisol-line">
+    CORTISOL:&nbsp;<span class="cortisol-value">847 ng/dL</span>
+  </div>
+
+  <div class="hint">click anywhere to lower your cortisol</div>
+
+  <script>
+    // ── Gauge segment geometry ──────────────────────────────────────────
+    const CX = 300, CY = 300, R_OUT = 270, R_IN = 188, GAP = 1.6;
+
+    // Each segment: standard-math angle range (180° = left, 0° = right)
+    const SEGS = [
+      { color: '#5cb85c', start: 180, end: 144 },  // LOW
+      { color: '#aacc44', start: 144, end: 108 },
+      { color: '#f0c040', start: 108, end: 72  },  // MEDIUM
+      { color: '#f08040', start: 72,  end: 36  },
+      { color: '#dc3c3c', start: 36,  end: 0   },  // HIGH
+    ];
+
+    function pt(r, deg) {
+      const rad = deg * Math.PI / 180;
+      return [CX + r * Math.cos(rad), CY - r * Math.sin(rad)];
+    }
+
+    function segPath(startDeg, endDeg) {
+      // Shrink by GAP on each side to create visual gaps between segments.
+      // Going clockwise on screen: outer arc sweep=1 (higher→lower angle),
+      // inner arc sweep=0 (lower→higher angle).
+      const s = startDeg - GAP, e = endDeg + GAP;
+      const [ox1, oy1] = pt(R_OUT, s);
+      const [ox2, oy2] = pt(R_OUT, e);
+      const [ix2, iy2] = pt(R_IN,  e);
+      const [ix1, iy1] = pt(R_IN,  s);
+      const f = v => v.toFixed(2);
+      return [
+        `M ${f(ox1)},${f(oy1)}`,
+        `A ${R_OUT},${R_OUT} 0 0,1 ${f(ox2)},${f(oy2)}`,
+        `L ${f(ix2)},${f(iy2)}`,
+        `A ${R_IN},${R_IN}   0 0,0 ${f(ix1)},${f(iy1)}`,
+        'Z',
+      ].join(' ');
+    }
+
+    const ns = 'http://www.w3.org/2000/svg';
+    const segGroup = document.getElementById('segments');
+    for (const { color, start, end } of SEGS) {
+      const path = document.createElementNS(ns, 'path');
+      path.setAttribute('d', segPath(start, end));
+      path.setAttribute('fill', color);
+      segGroup.appendChild(path);
+    }
+
+    // ── Needle slam + flash ─────────────────────────────────────────────
+    const needle = document.getElementById('needle-group');
+    const flash  = document.getElementById('flash');
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        // Needle: 12-o'clock baseline → rotate to +75° (red zone, with overshoot)
+        needle.style.transition = 'transform 500ms cubic-bezier(0.7, 0, 0.3, 1.5)';
+        needle.style.transform  = 'rotate(75deg)';
+
+        // Red flash: 100ms fade in, then 300ms fade out. Single shot.
+        flash.style.transition = 'opacity 100ms ease';
+        flash.style.opacity    = '1';
+        setTimeout(() => {
+          flash.style.transition = 'opacity 300ms ease';
+          flash.style.opacity    = '0';
+        }, 100);
+      }, 150);
+    });
+
+    // ── Dismiss ─────────────────────────────────────────────────────────
+    document.addEventListener('click', () => {
+      if (window.cg) window.cg.dismiss();
+    });
+  </script>
+
+</body>
+</html>

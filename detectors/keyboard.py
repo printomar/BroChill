@@ -32,6 +32,7 @@ class KeyboardDetector:
         self._last_burst_fire: float    = 0.0
 
         self._listener = keyboard.Listener(on_press=self._on_press)
+        self._listener.daemon = True
 
     # ------------------------------------------------------------------ #
     # pynput callback — runs on the listener thread                        #
@@ -105,6 +106,7 @@ class KeyboardDetector:
 
     def stop(self) -> None:
         self._listener.stop()
+        self._listener.join(timeout=1)
 
 
 def _key_name(key) -> str:
